@@ -7210,6 +7210,18 @@ class EnhancedCommandExecutor:
             # Always consider it a success if we have output, even with timeout
             success = True if self.timed_out and (self.stdout_data or self.stderr_data) else (self.return_code == 0)
 
+            # Detect a missing binary. When a wrapped tool is not installed the
+            # shell exits 127 with "<name>: not found" on stderr; without this
+            # flag the result (success=False, empty stdout) is indistinguishable
+            # from a tool that ran and genuinely found nothing, so a caller can
+            # silently treat "tool absent" as "no findings". Surface it instead.
+            combined_err = self.stderr_data or ""
+            tool_not_installed = (self.return_code == 127) or ("not found" in combined_err and "/bin/sh" in combined_err)
+            missing_tool = None
+            if tool_not_installed:
+                # stderr looks like "/bin/sh: 1: dirsearch: not found"
+                missing_tool = combined_err.split(": not found")[0].split(":")[-1].strip() or None
+
             # Log enhanced final results with summary using ModernVisualEngine
             output_size = len(self.stdout_data) + len(self.stderr_data)
             execution_time = self.end_time - self.start_time if self.end_time else 0
@@ -7242,6 +7254,11 @@ class EnhancedCommandExecutor:
                 "stderr": self.stderr_data,
                 "return_code": self.return_code,
                 "success": success,
+                "tool_not_installed": tool_not_installed,
+                "missing_tool": missing_tool,
+                "error": (f"Required tool '{missing_tool or 'command'}' is not installed on the "
+                          f"HexStrike host (shell: not found). This is a tool-availability "
+                          f"problem, not an empty scan result.") if tool_not_installed else None,
                 "timed_out": self.timed_out,
                 "partial_results": self.timed_out and (self.stdout_data or self.stderr_data),
                 "execution_time": self.end_time - self.start_time if self.end_time else 0,
@@ -13926,6 +13943,30 @@ class HTTPTestingFramework:
         params = params or []
         payloads = payloads or ["'\"<>`, ${7*7}"]
         base_data = base_data or {}
+
+        # Auto-derive the parameters to fuzz when the caller didn't name any.
+        # Without this the loop below never runs and the call returns
+        # {"success": True, "tested": 0} — a silent no-op that looks like a
+        # clean result. Derive from whatever the chosen location exposes.
+        derived_params = False
+        if not params:
+            if location == 'query':
+                params = [k for k, _ in parse_qsl(urlparse(url).query, keep_blank_values=True)]
+            elif location == 'body':
+                params = list(base_data.keys())
+            derived_params = bool(params)
+
+        # Still nothing to fuzz: say so explicitly instead of a silent tested=0.
+        if not params:
+            return {
+                'success': False,
+                'tested': 0,
+                'interesting': [],
+                'error': (f"No parameters to fuzz for location='{location}'. Pass `params`, "
+                          f"or (for location 'query'/'body') supply a URL query string / base_data "
+                          f"so they can be auto-derived."),
+            }
+
         interesting = []
         total = 0
         baseline = self.intercept_request(url, method, base_data)
@@ -13967,6 +14008,8 @@ class HTTPTestingFramework:
         return {
             'success': True,
             'tested': total,
+            'params_fuzzed': params,
+            'params_auto_derived': derived_params,
             'interesting': interesting[:50]
         }
 
