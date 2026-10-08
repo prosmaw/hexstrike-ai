@@ -10307,7 +10307,7 @@ def execute_gobuster_scan(target, params):
         mode = params.get('mode', 'dir')
         wordlist = params.get('wordlist', '/usr/share/wordlists/dirb/common.txt')
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['gobuster', mode, '-u', target, '-w', wordlist]
+        cmd_parts = ['gobuster', mode, '-u', safe_shell_arg(target), '-w', safe_shell_arg(wordlist)]
         if adjusted_args:
             cmd_parts.extend(adjusted_args.split())
 
@@ -10324,7 +10324,7 @@ def execute_nuclei_scan(target, params):
         severity = params.get('severity', '')
         tags = params.get('tags', '')
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['nuclei', '-u', target]
+        cmd_parts = ['nuclei', '-u', safe_shell_arg(target)]
         if severity:
             cmd_parts.extend(['-severity', severity])
         if tags:
@@ -10340,7 +10340,7 @@ def execute_nikto_scan(target, params):
     """Execute nikto scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['nikto', '-h', target]
+        cmd_parts = ['nikto', '-h', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10352,7 +10352,7 @@ def execute_sqlmap_scan(target, params):
     """Execute sqlmap scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', '--batch --random-agent'))
-        cmd_parts = ['sqlmap', '-u', target]
+        cmd_parts = ['sqlmap', '-u', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10369,7 +10369,7 @@ def execute_ffuf_scan(target, params):
         if 'FUZZ' not in target:
             target = target.rstrip('/') + '/FUZZ'
 
-        cmd_parts = ['ffuf', '-u', target, '-w', wordlist]
+        cmd_parts = ['ffuf', '-u', safe_shell_arg(target), '-w', safe_shell_arg(wordlist)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10382,7 +10382,7 @@ def execute_feroxbuster_scan(target, params):
     try:
         wordlist = params.get('wordlist', '/usr/share/wordlists/dirb/common.txt')
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['feroxbuster', '-u', target, '-w', wordlist]
+        cmd_parts = ['feroxbuster', '-u', safe_shell_arg(target), '-w', safe_shell_arg(wordlist)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10394,7 +10394,7 @@ def execute_katana_scan(target, params):
     """Execute katana scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['katana', '-u', target]
+        cmd_parts = ['katana', '-u', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10425,7 +10425,7 @@ def execute_wpscan_scan(target, params):
     """Execute wpscan scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', '--enumerate p,t,u'))
-        cmd_parts = ['wpscan', '--url', target]
+        cmd_parts = ['wpscan', '--url', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10437,7 +10437,7 @@ def execute_dirsearch_scan(target, params):
     """Execute dirsearch scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['dirsearch', '-u', target]
+        cmd_parts = ['dirsearch', '-u', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10449,7 +10449,7 @@ def execute_arjun_scan(target, params):
     """Execute arjun scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['arjun', '-u', target]
+        cmd_parts = ['arjun', '-u', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10461,7 +10461,7 @@ def execute_paramspider_scan(target, params):
     """Execute paramspider scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['paramspider', '-d', target]
+        cmd_parts = ['paramspider', '-d', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10473,7 +10473,7 @@ def execute_dalfox_scan(target, params):
     """Execute dalfox scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['dalfox', 'url', target]
+        cmd_parts = ['dalfox', 'url', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10485,7 +10485,7 @@ def execute_amass_scan(target, params):
     """Execute amass scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['amass', 'enum', '-d', target]
+        cmd_parts = ['amass', 'enum', '-d', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
         # amass's own -timeout (minutes) bounds runtime deterministically —
@@ -10504,7 +10504,7 @@ def execute_subfinder_scan(target, params):
     """Execute subfinder scan with optimized parameters"""
     try:
         additional_args = safe_additional_args(params.get('additional_args', ''))
-        cmd_parts = ['subfinder', '-d', target]
+        cmd_parts = ['subfinder', '-d', safe_shell_arg(target)]
         if additional_args:
             cmd_parts.extend(additional_args.split())
 
@@ -10938,7 +10938,7 @@ def nuclei():
                 "error": "Target parameter is required"
             }), 400
 
-        command = f"nuclei -u {target}"
+        command = f"nuclei -u {safe_shell_arg(target)}"
 
         if severity:
             command += f" -severity {severity}"
@@ -11452,7 +11452,7 @@ def dirb():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"dirb {url} {wordlist}"
+        command = f"dirb {safe_shell_arg(url)} {safe_shell_arg(wordlist)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -11480,7 +11480,7 @@ def nikto():
                 "error": "Target parameter is required"
             }), 400
 
-        command = f"nikto -h {target}"
+        command = f"nikto -h {safe_shell_arg(target)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -11509,10 +11509,10 @@ def sqlmap():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"sqlmap -u {url} --batch"
+        command = f"sqlmap -u {safe_shell_arg(url)} --batch"
 
         if data:
-            command += f" --data=\"{data}\""
+            command += f" --data={safe_shell_arg(data)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -11673,7 +11673,7 @@ def wpscan():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"wpscan --url {url}"
+        command = f"wpscan --url {safe_shell_arg(url)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -12059,7 +12059,7 @@ def nmap_advanced():
             logger.warning("🎯 Advanced Nmap called without target parameter")
             return jsonify({"error": "Target parameter is required"}), 400
 
-        command = f"nmap {scan_type} {target}"
+        command = f"nmap {scan_type} {safe_shell_arg(target)}"
 
         if ports:
             command += f" -p {ports}"
@@ -13142,7 +13142,7 @@ def feroxbuster():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"feroxbuster -u {url} -w {wordlist} -t {threads}"
+        command = f"feroxbuster -u {safe_shell_arg(url)} -w {safe_shell_arg(wordlist)} -t {threads}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -13242,7 +13242,7 @@ def xsser():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"xsser --url '{url}'"
+        command = f"xsser --url {safe_shell_arg(url)}"
 
         if params_str:
             command += f" --param='{params_str}'"
@@ -13274,7 +13274,7 @@ def wfuzz():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"wfuzz -w {wordlist} '{url}'"
+        command = f"wfuzz -w {safe_shell_arg(wordlist)} {safe_shell_arg(url)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -13308,7 +13308,7 @@ def dirsearch():
             logger.warning("🌐 Dirsearch called without URL parameter")
             return jsonify({"error": "URL parameter is required"}), 400
 
-        command = f"dirsearch -u {url} -e {extensions} -w {wordlist} -t {threads}"
+        command = f"dirsearch -u {safe_shell_arg(url)} -e {extensions} -w {safe_shell_arg(wordlist)} -t {threads}"
 
         if recursive:
             command += " -r"
@@ -13339,7 +13339,7 @@ def katana():
             logger.warning("🌐 Katana called without URL parameter")
             return jsonify({"error": "URL parameter is required"}), 400
 
-        command = f"katana -u {url} -d {depth}"
+        command = f"katana -u {safe_shell_arg(url)} -d {depth}"
 
         if js_crawl:
             command += " -jc"
@@ -13375,7 +13375,7 @@ def gau():
             logger.warning("🌐 Gau called without domain parameter")
             return jsonify({"error": "Domain parameter is required"}), 400
 
-        command = f"gau {domain}"
+        command = f"gau {safe_shell_arg(domain)}"
 
         if providers != "wayback,commoncrawl,otx,urlscan":
             command += f" --providers {providers}"
@@ -13410,7 +13410,7 @@ def waybackurls():
             logger.warning("🌐 Waybackurls called without domain parameter")
             return jsonify({"error": "Domain parameter is required"}), 400
 
-        command = f"waybackurls {domain}"
+        command = f"waybackurls {safe_shell_arg(domain)}"
 
         if get_versions:
             command += " --get-versions"
@@ -13445,7 +13445,7 @@ def arjun():
             logger.warning("🌐 Arjun called without URL parameter")
             return jsonify({"error": "URL parameter is required"}), 400
 
-        command = f"arjun -u {url} -m {method} -t {threads}"
+        command = f"arjun -u {safe_shell_arg(url)} -m {method} -t {threads}"
 
         if wordlist:
             command += f" -w {wordlist}"
@@ -13481,7 +13481,7 @@ def paramspider():
             logger.warning("🌐 ParamSpider called without domain parameter")
             return jsonify({"error": "Domain parameter is required"}), 400
 
-        command = f"paramspider -d {domain} -l {level}"
+        command = f"paramspider -d {safe_shell_arg(domain)} -l {level}"
 
         if exclude:
             command += f" --exclude {exclude}"
@@ -13515,7 +13515,7 @@ def x8():
             logger.warning("🌐 x8 called without URL parameter")
             return jsonify({"error": "URL parameter is required"}), 400
 
-        command = f"x8 -u {url} -w {wordlist} -X {method}"
+        command = f"x8 -u {safe_shell_arg(url)} -w {safe_shell_arg(wordlist)} -X {method}"
 
         if body:
             command += f" -b '{body}'"
@@ -13549,7 +13549,7 @@ def jaeles():
             logger.warning("🌐 Jaeles called without URL parameter")
             return jsonify({"error": "URL parameter is required"}), 400
 
-        command = f"jaeles scan -u {url} -c {threads} --timeout {timeout}"
+        command = f"jaeles scan -u {safe_shell_arg(url)} -c {threads} --timeout {timeout}"
 
         if signatures:
             command += f" -s {signatures}"
@@ -13587,7 +13587,7 @@ def dalfox():
         if pipe_mode:
             command = "dalfox pipe"
         else:
-            command = f"dalfox url {url}"
+            command = f"dalfox url {safe_shell_arg(url)}"
 
         if blind:
             command += " --blind"
@@ -15068,7 +15068,7 @@ def wafw00f():
                 "error": "Target parameter is required"
             }), 400
 
-        command = f"wafw00f {target}"
+        command = f"wafw00f {safe_shell_arg(target)}"
 
         if additional_args:
             command += f" {additional_args}"
