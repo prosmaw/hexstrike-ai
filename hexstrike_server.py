@@ -6927,8 +6927,13 @@ def setup_logging():
 # Configuration (using existing API_PORT from top of file)
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "0").lower() in ("1", "true", "yes", "y")
 COMMAND_TIMEOUT = int(os.environ.get("COMMAND_TIMEOUT", "300"))  # seconds; override via COMMAND_TIMEOUT env (issue #84)
-CACHE_SIZE = 1000
-CACHE_TTL = 3600  # 1 hour
+CACHE_SIZE = int(os.environ.get("CACHE_SIZE", "1000"))
+# Command-result cache TTL in seconds; override via CACHE_TTL env. Results are
+# keyed only on the command string, so a re-scan of the same target returns the
+# cached output until this expires — stale when the target's state changed
+# between runs. Set CACHE_TTL=0 to effectively disable result caching and always
+# scan fresh (recommended when scan freshness matters more than speed).
+CACHE_TTL = int(os.environ.get("CACHE_TTL", "3600"))  # 1 hour default
 
 class HexStrikeCache:
     """Advanced caching system for command results"""
@@ -6945,7 +6950,10 @@ class HexStrikeCache:
         return hashlib.md5(key_data.encode()).hexdigest()
 
     def _is_expired(self, timestamp: float) -> bool:
-        """Check if cache entry is expired"""
+        """Check if cache entry is expired. ttl <= 0 disables caching entirely
+        (every entry is treated as already expired), so results are always fresh."""
+        if self.ttl <= 0:
+            return True
         return time.time() - timestamp > self.ttl
 
     def get(self, command: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
