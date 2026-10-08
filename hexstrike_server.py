@@ -11732,13 +11732,13 @@ def ffuf():
         command = f"ffuf"
 
         if mode == "directory":
-            command += f" -u {url}/FUZZ -w {wordlist}"
+            command += f" -u {safe_shell_arg(f'{url}/FUZZ')} -w {safe_shell_arg(wordlist)}"
         elif mode == "vhost":
-            command += f" -u {url} -H 'Host: FUZZ' -w {wordlist}"
+            command += f" -u {safe_shell_arg(url)} -H 'Host: FUZZ' -w {safe_shell_arg(wordlist)}"
         elif mode == "parameter":
-            command += f" -u {url}?FUZZ=value -w {wordlist}"
+            command += f" -u {safe_shell_arg(f'{url}?FUZZ=value')} -w {safe_shell_arg(wordlist)}"
         else:
-            command += f" -u {url} -w {wordlist}"
+            command += f" -u {safe_shell_arg(url)} -w {safe_shell_arg(wordlist)}"
 
         command += f" -mc {match_codes}"
 
@@ -11817,9 +11817,9 @@ def amass():
         command = f"amass {mode}"
 
         if mode == "enum":
-            command += f" -d {domain}"
+            command += f" -d {safe_shell_arg(domain)}"
         else:
-            command += f" -d {domain}"
+            command += f" -d {safe_shell_arg(domain)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -11898,7 +11898,7 @@ def subfinder():
                 "error": "Domain parameter is required"
             }), 400
 
-        command = f"subfinder -d {domain}"
+        command = f"subfinder -d {safe_shell_arg(domain)}"
 
         if silent:
             command += " -silent"
@@ -11944,7 +11944,7 @@ def smbmap():
             command += f" -p {password}"
 
         if domain:
-            command += f" -d {domain}"
+            command += f" -d {safe_shell_arg(domain)}"
 
         if additional_args:
             command += f" {additional_args}"
@@ -12156,7 +12156,7 @@ def enum4linux_ng():
             command += f" -p {password}"
 
         if domain:
-            command += f" -d {domain}"
+            command += f" -d {safe_shell_arg(domain)}"
 
         enum_flags = []
 
@@ -15149,7 +15149,7 @@ def fierce():
                 "error": "Domain parameter is required"
             }), 400
 
-        command = f"fierce --domain {domain}"
+        command = f"fierce --domain {safe_shell_arg(domain)}"
 
         if dns_server:
             command += f" --dns-servers {dns_server}"
@@ -15182,7 +15182,7 @@ def dnsenum():
                 "error": "Domain parameter is required"
             }), 400
 
-        command = f"dnsenum {domain}"
+        command = f"dnsenum {safe_shell_arg(domain)}"
 
         if dns_server:
             command += f" --dnsserver {dns_server}"
@@ -15538,9 +15538,9 @@ def ai_test_payload():
         # Create test command based on method and payload
         if method.upper() == "GET":
             encoded_payload = payload.replace(" ", "%20").replace("'", "%27")
-            test_command = f"curl -s '{target_url}?test={encoded_payload}'"
+            test_command = f"curl -s {safe_shell_arg(f'{target_url}?test={encoded_payload}')}"
         else:
-            test_command = f"curl -s -X POST -d 'test={payload}' '{target_url}'"
+            test_command = f"curl -s -X POST -d {safe_shell_arg(f'test={payload}')} {safe_shell_arg(target_url)}"
 
         # Execute test
         result = execute_command(test_command, use_cache=False)
@@ -15603,7 +15603,7 @@ def api_fuzzer():
             for endpoint in endpoints:
                 for method in methods:
                     test_url = f"{base_url.rstrip('/')}/{endpoint.lstrip('/')}"
-                    command = f"curl -s -X {method} -w '%{{http_code}}|%{{size_download}}' '{test_url}'"
+                    command = f"curl -s -X {method} -w '%{{http_code}}|%{{size_download}}' {safe_shell_arg(test_url)}"
                     result = execute_command(command, use_cache=False)
                     results.append({
                         "endpoint": endpoint,
@@ -15898,7 +15898,7 @@ def jwt_analyzer():
                 none_header = base64.b64encode('{"alg":"none","typ":"JWT"}'.encode()).decode().rstrip('=')
                 none_token = f"{none_header}.{none_token_parts[1]}."
 
-                command = f"curl -s -H 'Authorization: Bearer {none_token}' '{target_url}'"
+                command = f"curl -s -H {safe_shell_arg(f'Authorization: Bearer {none_token}')} {safe_shell_arg(target_url)}"
                 none_result = execute_command(command, use_cache=False)
 
                 if "200" in none_result.get("stdout", "") or "success" in none_result.get("stdout", "").lower():
@@ -15938,7 +15938,7 @@ def api_schema_analyzer():
         logger.info(f"🔍 Starting API schema analysis: {schema_url}")
 
         # Fetch schema
-        command = f"curl -s '{schema_url}'"
+        command = f"curl -s {safe_shell_arg(schema_url)}"
         result = execute_command(command, use_cache=True)
 
         if not result.get("success"):
